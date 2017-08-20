@@ -27,18 +27,25 @@ public:
   ImgProcessor();
   ImgProcessor(string path);
   ImgProcessor(Mat image);
+
   ~ImgProcessor();
 
   Mat getImage();
+
   void setImage(string path);
   void setImage(Mat image);
 
   void showImage();
   void showImage(string windowHanle);
 
+  bool saveImage(string path);
+  bool saveImage(string path, Mat image);
+
   Mat cannyThreshold(int lowThreshold, int ratio, int kernelSize);
 
-  Mat getEdges();
-  Mat showEgdes();
+  vector<Vec3f> detectCircles(Mat image, double minDist, int minRadius,
+                              int maxRadius);
+  vector<Vec3f> detectCircles(double minDist, int minRadius, int maxRadius);
 
+  void showCircles(double minDist, int minRadius, int maxRadius);
 };

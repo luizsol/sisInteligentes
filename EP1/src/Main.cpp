@@ -6,16 +6,16 @@ using namespace cv;
 using namespace std;
 
 /** @function main */
-int main( int argc, char** argv )
-{
+int main( int argc, char** argv ){
   ImgProcessor processor("img/img0105.bmp");
 
-  Mat canny = processor.cannyThreshold(100, 3, 3);
+  imshow("canny", processor.cannyThreshold(100, 3, 3));
 
-  imshow("canny", canny);
+  ImgProcessor wheelEdges(processor.cannyThreshold(100, 3, 3));
+
+  wheelEdges.showCircles(20, 50, 80); //Detecting the truck wheel
 
   /// Wait until user exit program by pressing a key
-  waitKey(0);
 
   return 0;
-  }
+}
