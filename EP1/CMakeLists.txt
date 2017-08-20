@@ -1,8 +1,0 @@
-cmake_minimum_required(VERSION 2.8)
-project( EP1 )
-find_package( OpenCV REQUIRED )
-find_package( JPEG REQUIRED)
-include_directories( ${OpenCV_INCLUDE_DIRS} )
-include_directories( ${JPEG_INCLUDE_DIRS} )
-add_executable( main main.cpp )
-target_link_libraries( main ${OpenCV_LIBS} ${JPEG_LIBS}  )
