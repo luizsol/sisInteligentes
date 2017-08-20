@@ -36,6 +36,8 @@ public:
   void showImage();
   void showImage(string windowHanle);
 
+  Mat cannyThreshold(int lowThreshold, int ratio, int kernelSize);
+
   Mat getEdges();
   Mat showEgdes();
 

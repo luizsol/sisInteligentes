@@ -5,9 +5,17 @@
 using namespace cv;
 using namespace std;
 
-int main(int argc, char** argv){
+/** @function main */
+int main( int argc, char** argv )
+{
   ImgProcessor processor("img/img0105.bmp");
-  processor.showImage("A imagem");
+
+  Mat canny = processor.cannyThreshold(100, 3, 3);
+
+  imshow("canny", canny);
+
+  /// Wait until user exit program by pressing a key
+  waitKey(0);
 
   return 0;
-}
+  }
