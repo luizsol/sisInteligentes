@@ -10,7 +10,7 @@ using namespace cv;
 
 int main(int argc, char const *argv[]){
 
-  string filename = "vid4.avi";
+  string filename = "bird.avi";
   VideoCapture capture(filename);
   Mat frame;
 
@@ -18,10 +18,13 @@ int main(int argc, char const *argv[]){
       throw "Error when reading steam_avi";
 
   namedWindow("w", 1);
+  capture.retrieve(frame);
   for( ; ; )
   {
     capture >> frame;
-    imshow("w", frame);
+    if(!frame.empty()){
+      imshow("w", frame);
+    }
   }
   waitKey(); // key press to close window
 
