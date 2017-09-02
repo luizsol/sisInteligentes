@@ -43,6 +43,8 @@ public:
 
   Mat cannyThreshold(int lowThreshold, int ratio, int kernelSize);
 
+  Mat_<std::complex<double>> gradient(Mat image);
+
   vector<Vec3f> detectCircles(Mat image, double minDist, int minRadius,
                               int maxRadius);
   vector<Vec3f> detectCircles(double minDist, int minRadius, int maxRadius);

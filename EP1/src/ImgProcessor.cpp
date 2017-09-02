@@ -7,9 +7,11 @@
  */
 
 #include "ImgProcessor.h"
+#include <eigen3/Eigen/Dense>
 #include <iostream>
 
 using namespace std;
+using namespace Eigen;
 using namespace cv;
 
 ImgProcessor::ImgProcessor(){}
@@ -64,6 +66,15 @@ Mat ImgProcessor::cannyThreshold(int lowThreshold, int ratio, int kernelSize){
   ImgProcessor::getImage().copyTo( dst, detected_edges);
 
   return dst;
+}
+
+Mat_<std::complex<double>> ImgProcessor::gray_gradient(Mat image){
+  Mat saida = Mat_<std::complex<double>>(image.rows, image.cols);
+  for (int i = 0; i < image.rows; i++){
+    for (int j = 0; j < image.cols; i++){
+      m.at(r, c);
+    }
+  }
 }
 
 bool ImgProcessor::saveImage(string path){
