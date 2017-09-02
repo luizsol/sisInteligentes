@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import copy
+
 import cv2
 import numpy as np
 
@@ -34,6 +36,17 @@ class ImageProcessor(object):
         path = 'image_processor_output.bmp' if not path else path
         cv2.imwrite(path, self.image)
 
-    def to_gray(self):
-        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+    def get_laplacian(self):
+        return cv2.Laplacian(self.image, cv2.CV_64F)
 
+    def apply_laplacian(self):
+        self.image = self.get_laplacian()
+
+    def x_grad(self, kernel_size=5):
+        return cv2.Sobel(self.image, cv2.CV_64F, 1, 0, kernel_size)
+
+    def y_grad(self, kernel_size=5):
+        return cv2.Sobel(self.image, cv2.CV_64F, 0, 2, kernel_size)
+
+    def copy(self):
+        return copy.deepcopy(self)
