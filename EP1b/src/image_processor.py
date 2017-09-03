@@ -62,6 +62,25 @@ class ImageProcessor(object):
             return False
         return True
 
+    def lines(self):
+        """Determines the number of lines of the image."""
+        return self.image.shape[0]
+
+    def cols(self):
+        """Determines the number of columns of the image."""
+        return self.image.shape[1]
+
+    def colors(self):
+        """Determines the number of colors of the image."""
+        shape = self.image.shape
+        if len(shape) == 2:
+            return 1
+        return shape[2]
+
+    def copy(self):
+        """Genetates a deep copy of this class instance."""
+        return copy.deepcopy(self)
+
     def show_image(self, window_name='image'):
         """Displays the current image.
 
@@ -225,14 +244,91 @@ class ImageProcessor(object):
         self.image = self.get_complex_grad(kernel_size=kernel_size,
                                            data_type=data_type)
 
-    def lines(self):
-        """Determines the number of lines of the image."""
-        return self.image.shape[0]
+    def get_smooth_complex_grad(self, filter_kernel_size=5, grad_kernel_size=5,
+                                data_type=cv2.CV_32F):
+        # TODO
+        pass
 
-    def cols(self):
-        """Determines the number of columns of the image."""
-        return self.image.shape[1]
 
-    def copy(self):
-        """Genetates a deep copy of this class instance."""
-        return copy.deepcopy(self)
+    def get_gaussian_blur(self, kernel_height=5, kernel_width=5,
+                          data_type=cv2.CV_32F):
+        return cv2.GaussianBlur(self.image,(kernel_height,kernel_width),
+                                data_type)
+
+    def apply_gaussian_blur(self, kernel_height=5, kernel_width=5,
+                            data_type=cv2.CV_32F):
+        self.image = self.get_gaussian_blur(kernel_height=kernel_height,
+                        kernel_width=kernel_width, data_type=data_type)
+
+    def show_gaussian_blur(self, window_name='image', kernel_height=5,
+                           kernel_width=5, data_type=cv2.CV_32F):
+        """Shows the Sobel's Y axis gradient of the image.
+
+        Keyword Args:
+            window_name (='image'): the name of the window in which the image
+                will be displayed
+            kernel_size (=5): the kernel size of the Sobel filter
+            data_type (=cv2.CV_32F): the datatype to be used on the calculation
+        """
+        cv2.imshow(window_name,
+                   self.get_gaussian_blur(
+                        kernel_height=kernel_height, kernel_width=kernel_width,
+                        data_type=data_type))
+
+    def get_canny(self, threshold_1, threshold_2):
+        return cv2.Canny(self.image, threshold_1, threshold_2)
+
+    def apply_canny(self, threshold_1, threshold_2):
+        self.image = self.get_canny(threshold_1, threshold_2)
+
+    def show_canny(self, threshold_1, threshold_2, window_name='image'):
+        cv2.imshow(window_name, self.get_canny(threshold_1, threshold_2))
+
+    def get_circle_hough_by_grad(self, radius, threshold=10):
+        channels = self.colors()
+
+        if channels == 1:
+            data_type = type(self.image[0][0])
+        else:
+            data_type = type(self.image[0][0][0])
+
+        result = np.zeros(self.image.shape, data_type)
+
+        grad = self.get_complex_grad()
+
+        lines = self.lines()
+        cols = self.cols()
+
+        if channels == 1:
+            grad.resize((lines, cols, 1), refcheck=False)
+            result.resize((lines, cols, 1), refcheck=False)
+
+        for channel in xrange(0, channels):
+            for line in xrange(0, lines):
+                for col in xrange(0, cols):
+                    value = grad[line][col][channel]
+                    if abs(value) > threshold:
+                        print 'at line ', line, ', col ', col, ' , channel ', channel
+                        print ' ', value
+                        dx = abs(int(np.cos(np.angle(value)) * radius))
+                        dy = abs(int(np.sin(np.angle(value)) * radius))
+                        # FIXME put just two points that include both deltas
+                        if (line + dy) < lines:
+                            result[line + dy][col][channel] = \
+                                result[line + dy][col][channel] + data_type(500)
+                        if (line - dy) >= 0:
+                            result[line - dy][col][channel] = \
+                                result[line - dy][col][channel] + data_type(500)
+                        if (col + dx) < cols:
+                            result[line][col + dx][channel] = \
+                                result[line][col + dx][channel] + data_type(500)
+                        if (col - dx) >= 0:
+                            result[line][col - dx][channel] = \
+                                result[line][col - dx][channel] + data_type(500)
+        if channels == 1:
+            result.resize((lines, cols), refcheck=False)
+
+        return result
+
+    def show_circle_hough_by_grad(self, radius, window_name='image', threshold=10):
+        cv2.imshow(window_name, self.get_circle_hough_by_grad(radius, threshold=threshold))
