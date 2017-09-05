@@ -246,8 +246,31 @@ class ImageProcessor(object):
 
     def get_smooth_complex_grad(self, filter_kernel_size=5, grad_kernel_size=5,
                                 data_type=cv2.CV_32F):
-        # TODO
-        pass
+
+        raise NotImplementedError
+
+        old_grad = self.get_complex_grad(kernel_size=grad_kernel_size,
+                                         data_type=data_type)
+        new_grad = old_grad
+        channels = self.colors()
+        lines = self.lines()
+        cols = self.cols()
+
+        if channels == 1:
+            old_grad.resize((lines, cols, 1), refcheck=False)
+            new_grad.resize((lines, cols, 1), refcheck=False)
+
+        for line in xrange(filter_kernel_size / 2, lines -
+                           filter_kernel_size / 2):
+            for col in xrange(filter_kernel_size / 2, cols -
+                              filter_kernel_size / 2):
+                for channel in xrange(0, channels):
+                    # soma todos os vetores
+                    # TODO
+                    sun = np.sum()
+
+                    # descobre o angulo da soma
+                    # cria um numero complexo de mesma dimensão e com angulos calculados
 
 
     def get_gaussian_blur(self, kernel_height=5, kernel_width=5,
@@ -308,23 +331,23 @@ class ImageProcessor(object):
                 for col in xrange(0, cols):
                     value = grad[line][col][channel]
                     if abs(value) > threshold:
-                        print 'at line ', line, ', col ', col, ' , channel ', channel
-                        print ' ', value
-                        dx = abs(int(np.cos(np.angle(value)) * radius))
-                        dy = abs(int(np.sin(np.angle(value)) * radius))
-                        # FIXME put just two points that include both deltas
-                        if (line + dy) < lines:
-                            result[line + dy][col][channel] = \
-                                result[line + dy][col][channel] + data_type(500)
-                        if (line - dy) >= 0:
-                            result[line - dy][col][channel] = \
-                                result[line - dy][col][channel] + data_type(500)
-                        if (col + dx) < cols:
-                            result[line][col + dx][channel] = \
-                                result[line][col + dx][channel] + data_type(500)
-                        if (col - dx) >= 0:
-                            result[line][col - dx][channel] = \
-                                result[line][col - dx][channel] + data_type(500)
+                        # print 'at line ', line, ', col ', col, ' , channel ', channel
+                        # print ' ', value
+                        dx = int(np.cos(np.angle(value)) * radius)
+                        dy = int(np.sin(np.angle(value)) * radius)
+                        if ((line + dy) < lines and (line + dy) > 0) and \
+                           ((col + dx) < cols and (col + dx) > 0):
+
+                            result[line + dy, col + dx,channel] = \
+                                result[line + dy, col + dx, channel] \
+                                + data_type(100)
+
+                        if ((line - dy) < lines and (line - dy) > 0) and \
+                           ((col - dx) < cols and (col - dx) > 0):
+
+                                result[line - dy, col - dx, channel] = \
+                                result[line - dy, col - dx, channel] \
+                                + data_type(100)
         if channels == 1:
             result.resize((lines, cols), refcheck=False)
 

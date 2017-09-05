@@ -7,8 +7,8 @@ import numpy as np
 from image_processor import *
 
 if __name__ == '__main__':
-    # img = ImageProcessor('img/img0105.bmp')
-    img = ImageProcessor('img/fillcircle.png')
+    img = ImageProcessor('img/img0105.bmp')
+    # img = ImageProcessor('img/fillcircle.png')
     img.show_image(window_name="Original Image")
     # img.show_laplacian(window_name="Laplacian")
     # img.show_x_grad(window_name="X-Gradient")
@@ -22,7 +22,13 @@ if __name__ == '__main__':
     # img.show_x_grad(window_name="X-Gradient-Canny")
     # img.show_y_grad(window_name="Y-Gradient-Canny")
 
-    img.show_circle_hough_by_grad(window_name="Circulos", radius=70, threshold=100)
+    img.show_circle_hough_by_grad(window_name="Circulos 20", radius=20, threshold=100)
+    img.show_circle_hough_by_grad(window_name="Circulos 50", radius=50, threshold=100)
+    img.show_circle_hough_by_grad(window_name="Circulos 55", radius=55, threshold=100)
+    img.show_circle_hough_by_grad(window_name="Circulos 60", radius=60, threshold=100)
+    img.show_circle_hough_by_grad(window_name="Circulos 65", radius=65, threshold=100)
+    img.show_circle_hough_by_grad(window_name="Circulos 70", radius=70, threshold=100)
+    img.show_circle_hough_by_grad(window_name="Circulos 75", radius=75, threshold=100)
 
     # for radius in xrange(1, 200):
     #     print 'radius = ', radius
