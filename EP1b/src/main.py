@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import cv2
-import numpy as np
+# import numpy as np
 
 from image_processor import *
 
@@ -22,17 +22,36 @@ if __name__ == '__main__':
     # img.show_x_grad(window_name="X-Gradient-Canny")
     # img.show_y_grad(window_name="Y-Gradient-Canny")
 
-    img.show_circle_hough_by_grad(window_name="Circulos 20", radius=20, threshold=100)
-    img.show_circle_hough_by_grad(window_name="Circulos 50", radius=50, threshold=100)
-    img.show_circle_hough_by_grad(window_name="Circulos 55", radius=55, threshold=100)
-    img.show_circle_hough_by_grad(window_name="Circulos 60", radius=60, threshold=100)
-    img.show_circle_hough_by_grad(window_name="Circulos 65", radius=65, threshold=100)
-    img.show_circle_hough_by_grad(window_name="Circulos 70", radius=70, threshold=100)
-    img.show_circle_hough_by_grad(window_name="Circulos 75", radius=75, threshold=100)
+    # img.show_circle_hough_by_grad(window_name="Circulos 1", radius=1,
+    #                               threshold=100)
+    # img.show_circle_hough_by_grad(window_name="Circulos 20", radius=20,
+    #                               threshold=100)
+    # img.show_circle_hough_by_grad(window_name="Circulos 50", radius=50,
+    #                               threshold=100)
+    # img.show_circle_hough_by_grad(window_name="Circulos 55", radius=55,
+    #                               threshold=100)
+    # img.show_circle_hough_by_grad(window_name="Circulos 60", radius=60,
+    #                               threshold=100)
+    # img.show_circle_hough_by_grad(window_name="Circulos 65", radius=65,
+    #                               threshold=100)
+    # img.show_circle_hough_by_grad(window_name="Circulos 70", radius=70,
+    #                               threshold=100)
+    img.show_circle_hough_by_grad(window_name="Circulos 75, 10it", radius=75,
+                                  threshold=100, smooth_grad_iterations=10)
+
+    img.show_circle_hough_by_grad(window_name="Circulos 75, 20it", radius=75,
+                                  threshold=100, smooth_grad_iterations=20)
+
+    img.show_circle_hough_by_grad(window_name="Circulos 75, 30it", radius=75,
+                                  threshold=100, smooth_grad_iterations=30)
+
+    img.show_circle_hough_by_grad(window_name="Circulos 75, 40it", radius=75,
+                                  threshold=100, smooth_grad_iterations=40)
 
     # for radius in xrange(1, 200):
     #     print 'radius = ', radius
-    #     print '   max = ', img.get_circle_hough_by_grad(radius, threshold=0).max()
+    #     print '   max = ', img.get_circle_hough_by_grad(radius,
+    #                                                     threshold=0).max()
 
     cv2.waitKey()
     cv2.destroyAllWindows()

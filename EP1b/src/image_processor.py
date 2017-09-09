@@ -6,6 +6,7 @@ import copy
 import cv2
 import numpy as np
 
+
 class ImageProcessor(object):
     """A class responsible for storing and processing images.
 
@@ -245,13 +246,11 @@ class ImageProcessor(object):
                                            data_type=data_type)
 
     def get_smooth_complex_grad(self, filter_kernel_size=5, grad_kernel_size=5,
-                                data_type=cv2.CV_32F):
-
-        raise NotImplementedError
+                                data_type=cv2.CV_32F, iterations=3):
 
         old_grad = self.get_complex_grad(kernel_size=grad_kernel_size,
                                          data_type=data_type)
-        new_grad = old_grad
+        new_grad = np.copy(old_grad)
         channels = self.colors()
         lines = self.lines()
         cols = self.cols()
@@ -260,28 +259,49 @@ class ImageProcessor(object):
             old_grad.resize((lines, cols, 1), refcheck=False)
             new_grad.resize((lines, cols, 1), refcheck=False)
 
-        for line in xrange(filter_kernel_size / 2, lines -
-                           filter_kernel_size / 2):
-            for col in xrange(filter_kernel_size / 2, cols -
-                              filter_kernel_size / 2):
-                for channel in xrange(0, channels):
-                    # soma todos os vetores
-                    # TODO
-                    sun = np.sum()
+        np.savetxt('grad.txt', old_grad)
 
-                    # descobre o angulo da soma
-                    # cria um numero complexo de mesma dimensão e com angulos calculados
+        for iteration in xrange(0, iterations):
+            for line in xrange(filter_kernel_size / 2, lines -
+                               filter_kernel_size / 2):
+                for col in xrange(filter_kernel_size / 2, cols -
+                                  filter_kernel_size / 2):
+                    for channel in xrange(0, channels):
+                        # Prototype
+                        lower_line_range = line - filter_kernel_size / 2
+                        upper_line_range = line + filter_kernel_size / 2
+                        lower_col_range = col - filter_kernel_size / 2
+                        upper_col_range = col + filter_kernel_size / 2
 
+                        grad_sum = \
+                            np.sum(old_grad[lower_line_range:upper_line_range,
+                                            lower_col_range:upper_col_range,
+                                            channel])
+
+                        norm = abs(new_grad[line, col, channel])
+                        real_prop = np.cos(np.angle(grad_sum))
+                        im_prop = np.sin(np.angle(grad_sum))
+
+                        new_grad[line, col, channel] = norm * real_prop + \
+                            norm * (0 + 1j) * im_prop
+
+            old_grad = np.copy(new_grad)
+
+        if channels == 1:
+            new_grad.resize((lines, cols), refcheck=False)
+
+        return new_grad
 
     def get_gaussian_blur(self, kernel_height=5, kernel_width=5,
                           data_type=cv2.CV_32F):
-        return cv2.GaussianBlur(self.image,(kernel_height,kernel_width),
+        return cv2.GaussianBlur(self.image, (kernel_height, kernel_width),
                                 data_type)
 
     def apply_gaussian_blur(self, kernel_height=5, kernel_width=5,
                             data_type=cv2.CV_32F):
         self.image = self.get_gaussian_blur(kernel_height=kernel_height,
-                        kernel_width=kernel_width, data_type=data_type)
+                                            kernel_width=kernel_width,
+                                            data_type=data_type)
 
     def show_gaussian_blur(self, window_name='image', kernel_height=5,
                            kernel_width=5, data_type=cv2.CV_32F):
@@ -293,10 +313,9 @@ class ImageProcessor(object):
             kernel_size (=5): the kernel size of the Sobel filter
             data_type (=cv2.CV_32F): the datatype to be used on the calculation
         """
-        cv2.imshow(window_name,
-                   self.get_gaussian_blur(
-                        kernel_height=kernel_height, kernel_width=kernel_width,
-                        data_type=data_type))
+        cv2.imshow(window_name, self.get_gaussian_blur(
+            kernel_height=kernel_height, kernel_width=kernel_width,
+            data_type=data_type))
 
     def get_canny(self, threshold_1, threshold_2):
         return cv2.Canny(self.image, threshold_1, threshold_2)
@@ -307,7 +326,9 @@ class ImageProcessor(object):
     def show_canny(self, threshold_1, threshold_2, window_name='image'):
         cv2.imshow(window_name, self.get_canny(threshold_1, threshold_2))
 
-    def get_circle_hough_by_grad(self, radius, threshold=10):
+    def get_circle_hough_by_grad(self, radius, threshold=10, smooth_grad=True,
+                                 smooth_grad_iterations=5):
+
         channels = self.colors()
 
         if channels == 1:
@@ -317,7 +338,12 @@ class ImageProcessor(object):
 
         result = np.zeros(self.image.shape, data_type)
 
-        grad = self.get_complex_grad()
+        if smooth_grad:
+            grad = self.get_smooth_complex_grad(
+                filter_kernel_size=5, grad_kernel_size=5,
+                iterations=smooth_grad_iterations)
+        else:
+            grad = self.get_complex_grad()
 
         lines = self.lines()
         cols = self.cols()
@@ -331,27 +357,27 @@ class ImageProcessor(object):
                 for col in xrange(0, cols):
                     value = grad[line][col][channel]
                     if abs(value) > threshold:
-                        # print 'at line ', line, ', col ', col, ' , channel ', channel
-                        # print ' ', value
                         dx = int(np.cos(np.angle(value)) * radius)
                         dy = int(np.sin(np.angle(value)) * radius)
                         if ((line + dy) < lines and (line + dy) > 0) and \
                            ((col + dx) < cols and (col + dx) > 0):
-
-                            result[line + dy, col + dx,channel] = \
+                            result[line + dy, col + dx, channel] = \
                                 result[line + dy, col + dx, channel] \
-                                + data_type(100)
+                                + data_type(40)
 
                         if ((line - dy) < lines and (line - dy) > 0) and \
                            ((col - dx) < cols and (col - dx) > 0):
-
-                                result[line - dy, col - dx, channel] = \
+                            result[line - dy, col - dx, channel] = \
                                 result[line - dy, col - dx, channel] \
-                                + data_type(100)
+                                + data_type(40)
         if channels == 1:
             result.resize((lines, cols), refcheck=False)
 
         return result
 
-    def show_circle_hough_by_grad(self, radius, window_name='image', threshold=10):
-        cv2.imshow(window_name, self.get_circle_hough_by_grad(radius, threshold=threshold))
+    def show_circle_hough_by_grad(self, radius, window_name='image',
+                                  threshold=10, smooth_grad=True,
+                                  smooth_grad_iterations=5):
+        cv2.imshow(window_name, self.get_circle_hough_by_grad(
+            radius, threshold=threshold, smooth_grad=smooth_grad,
+            smooth_grad_iterations=smooth_grad_iterations))
