@@ -259,19 +259,17 @@ class ImageProcessor(object):
             old_grad.resize((lines, cols, 1), refcheck=False)
             new_grad.resize((lines, cols, 1), refcheck=False)
 
-        np.savetxt('grad.txt', old_grad)
-
-        for iteration in xrange(0, iterations):
-            for line in xrange(filter_kernel_size / 2, lines -
-                               filter_kernel_size / 2):
-                for col in xrange(filter_kernel_size / 2, cols -
-                                  filter_kernel_size / 2):
-                    for channel in xrange(0, channels):
+        for iteration in range(0, iterations):
+            for line in range(filter_kernel_size // 2, lines -
+                              filter_kernel_size // 2):
+                for col in range(filter_kernel_size // 2, cols -
+                                 filter_kernel_size // 2):
+                    for channel in range(0, channels):
                         # Prototype
-                        lower_line_range = line - filter_kernel_size / 2
-                        upper_line_range = line + filter_kernel_size / 2
-                        lower_col_range = col - filter_kernel_size / 2
-                        upper_col_range = col + filter_kernel_size / 2
+                        lower_line_range = line - filter_kernel_size // 2
+                        upper_line_range = line + filter_kernel_size // 2
+                        lower_col_range = col - filter_kernel_size // 2
+                        upper_col_range = col + filter_kernel_size // 2
 
                         grad_sum = \
                             np.sum(old_grad[lower_line_range:upper_line_range,
@@ -352,9 +350,9 @@ class ImageProcessor(object):
             grad.resize((lines, cols, 1), refcheck=False)
             result.resize((lines, cols, 1), refcheck=False)
 
-        for channel in xrange(0, channels):
-            for line in xrange(0, lines):
-                for col in xrange(0, cols):
+        for channel in range(0, channels):
+            for line in range(0, lines):
+                for col in range(0, cols):
                     value = grad[line][col][channel]
                     if abs(value) > threshold:
                         dx = int(np.cos(np.angle(value)) * radius)
