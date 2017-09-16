@@ -3,6 +3,8 @@
 import cv2
 import numpy as np
 
+from container import Container
+
 
 class ImageProcessor(object):
     """A class responsible for storing images.
@@ -70,18 +72,18 @@ class ImageProcessor(object):
         else:
             data_type = type(container.image[0][0][0])
 
-        result = np.zeros(container.image.shape, data_type)
+        result = np.zeros(container.image.shape[:2], data_type)
 
         grad = container.get_grad()
 
         lines = container.lines()
         cols = container.cols()
 
-        point_value = 10
+        point_value = 1
 
         if channels == 1:
             grad.resize((lines, cols, 1), refcheck=False)
-            result.resize((lines, cols, 1), refcheck=False)
+            # result.resize((lines, cols, 1), refcheck=False)
 
         for channel in range(0, channels):
             for line in range(0, lines):
@@ -92,18 +94,13 @@ class ImageProcessor(object):
                         dy = int(np.sin(np.angle(value)) * radius)
                         if ((line + dy) < lines and (line + dy) > 0) and \
                            ((col + dx) < cols and (col + dx) > 0):
-                            result[line + dy, col + dx, channel] = \
-                                result[line + dy, col + dx, channel] \
+                            result[line + dy, col + dx] += \
                                 + data_type(point_value)
 
                         if ((line - dy) < lines and (line - dy) > 0) and \
                            ((col - dx) < cols and (col - dx) > 0):
-                            result[line - dy, col - dx, channel] = \
-                                result[line - dy, col - dx, channel] \
+                            result[line - dy, col - dx] += \
                                 + data_type(point_value)
-
-        if channels == 1:
-            result.resize((lines, cols), refcheck=False)
 
         return result
 
@@ -114,13 +111,15 @@ class ImageProcessor(object):
             container, radius, threshold=threshold))
         cv2.waitKey()
 
-    def detect_circle(self, container, radius, threshold=90,
+    def detect_circle(self, container, radius, threshold=44,
                       data_type=cv2.CV_32F):
-        points = self.get_circle_hough_by_grad(container, radius, threshold=0)
-        points[points < threshold] = 0
-        points = cv2.GaussianBlur(points, (9, 9), data_type)
+        t_container = Container(container.image)
+        points = self.get_circle_hough_by_grad(t_container, radius,
+                                               threshold=0)
+
+        points = cv2.GaussianBlur(points, (5, 5), data_type)
         center = np.unravel_index(points.argmax(), points.shape)
-        if points[center] > 0:
+        if points[center] > threshold:
             return center
         else:
             return None
