@@ -11,7 +11,7 @@ class Container(object):
 
     def __init__(self, image=None):
         """Inits ImageProcessor with an optional image."""
-        if image:
+        if image is not None:
             self.image = image
         else:
             self._image = None

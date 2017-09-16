@@ -113,3 +113,14 @@ class ImageProcessor(object):
         cv2.imshow(window_name, self.get_circle_hough_by_grad(
             container, radius, threshold=threshold))
         cv2.waitKey()
+
+    def detect_circle(self, container, radius, threshold=90,
+                      data_type=cv2.CV_32F):
+        points = self.get_circle_hough_by_grad(container, radius, threshold=0)
+        points[points < threshold] = 0
+        points = cv2.GaussianBlur(points, (9, 9), data_type)
+        center = np.unravel_index(points.argmax(), points.shape)
+        if points[center] > 0:
+            return center
+        else:
+            return None
