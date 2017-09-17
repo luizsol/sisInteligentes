@@ -8,12 +8,13 @@ from image_processor import *
 from video_processor import *
 
 if __name__ == '__main__':
-    # path = '../img/img0105.bmp'
+    path = '../img/img0105.bmp'
     # path = '../img/img0106.bmp'
     # path = '../img/fillcircle.png'
-    # x = Container(path)
-    # x.apply_gaussian_blur()
-    # x.save(path='../output/a.bmp')
+    x = Container(path)
+    x.apply_gaussian_blur()
+    y = Container(x.get_grad_img())
+    y.save(path='../output/grad.bmp')
     # img_p = ImageProcessor()
 
     # result = img_p.detect_tyre(x)

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""A module to implement some basic image manipulations."""
+__author__ = "Luiz Sol"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Luiz Sol"
+__email__ = "luizedusol@gmail.com"
 
 import copy
 
@@ -7,7 +13,11 @@ import numpy as np
 
 
 class Container(object):
-    """docstring for Container"""
+    """A class to implement some basic image manipulations.
+
+    Attributes:
+        image (str): The image stored by the object.
+    """
 
     def __init__(self, image=None):
         """Inits ImageProcessor with an optional image."""
@@ -23,9 +33,6 @@ class Container(object):
         The true image object is incapsulated on the _image attribute,
         therefore the user must use the image virtual attribute to interact
         with image stored in this class
-
-        Returns:
-            A numpy.ndarray containing the image.
         """
         return self._image
 
@@ -48,11 +55,7 @@ class Container(object):
             raise TypeError
 
     def has_image(self):
-        """Determines whether an image is already stored.
-
-        Returns:
-            True if there's already an image stored, False otherwise.
-        """
+        """Determines whether an image is already stored."""
         if self.image is None:
             return False
         return True
@@ -84,7 +87,6 @@ class Container(object):
                 will be displayed
         """
         cv2.imshow(window_name, self.image)
-        cv2.waitKey()
 
     def save(self, path='image_processor_output.bmp'):
         """Saves the current image on the file system.
@@ -96,22 +98,29 @@ class Container(object):
         cv2.imwrite(path, self.image)
 
     def get_grayscale(self):
-        """Gets the Grayscale version of the image.
-
-        Returns:
-            The Grayscale version of the image.
-        """
+        """Gets the Grayscale version of the image."""
         return cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
     def apply_grayscale(self):
         """Substitutes the current image for it's Grayscale version."""
         self.image = self.get_grayscale()
 
-    def show_grayscale(self, window_name='image'):
-        """Shows the current image's Grayscale version."""
+    def show_grayscale(self, window_name='grayscale'):
+        """Shows the current image's Grayscale version.
+
+        Keyword Args:
+            window_name (='grayscale'): the name of the window in which the
+                image will be displayed
+        """
         cv2.imshow(window_name, self.get_grayscale())
 
     def get_grad(self, kernel_size=5, data_type=cv2.CV_32F):
+        """Retrieves the image's complex matrix of the storaged image.
+
+        Keyword Args:
+            kernel_size (=5): The kernel size of the Scharr filter.
+            data_type (=cv2.CV_32F): The data type of the image elements
+        """
         grad_x = (1.0 / 4080) * cv2.Scharr(self.image, data_type, 1, 0,
                                            kernel_size)
 
@@ -120,8 +129,40 @@ class Container(object):
 
         return grad_x + (0 + 1j) * grad_y
 
+    def get_grad_img(self, kernel_size=5, data_type=cv2.CV_32F):
+        """Generates an image of this image's gradient.
+
+        Keyword Args:
+            kernel_size (=5): The kernel size of the Scharr filter.
+            data_type (=cv2.CV_32F): The data type of the image elements
+        """
+        grad = self.get_grad(kernel_size=kernel_size, data_type=data_type)
+
+        lines = self.lines()
+        cols = self.cols()
+        n_grad = np.zeros((lines, cols, 3), np.uint8)
+
+        for line in range(0, lines):
+                for col in range(0, cols):
+                    g_sum = np.sum(grad[line, col])
+                    g_abs = np.abs(g_sum) / 3.0
+                    x = np.uint8(255 * g_abs * np.cos(g_sum))
+                    y = np.uint8(255 * g_abs * np.sin(g_sum))
+                    n_grad[line, col, 0] = x
+                    n_grad[line, col, 2] = y
+
+        return n_grad
+
     def show_grad(self, kernel_size=5, data_type=cv2.CV_32F,
                   window_name='grad'):
+        """Displays the current image's gradient.
+
+        Keyword Args:
+            kernel_size (=5): The kernel size of the Scharr filter.
+            data_type (=cv2.CV_32F): The data type of the image elements
+            window_name (='grad'): the name of the window in which the image
+                will be displayed
+        """
         cv2.imshow(window_name, self.get_grad(kernel_size=kernel_size,
                    data_type=data_type))
 
@@ -129,23 +170,57 @@ class Container(object):
 
     def get_gaussian_blur(self, kernel_height=5, kernel_width=5,
                           data_type=cv2.CV_32F):
+        """Retrieves the result of the gaussian blur of the storaged image.
+
+        Keyword Args:
+            kernel_height (=5): The kernel height of the Gaussian filter.
+            kernel_width (=5): The kernel width of the Gaussian filter.
+            data_type (=cv2.CV_32F): The data type of the image elements
+        """
         return cv2.GaussianBlur(self.image, (kernel_height, kernel_width),
                                 data_type)
 
     def apply_gaussian_blur(self, kernel_height=5, kernel_width=5,
                             data_type=cv2.CV_32F):
+        """Applies the Gaussian Blur on the storaged image.
+
+        Keyword Args:
+            kernel_height (=5): The kernel height of the Gaussian filter.
+            kernel_width (=5): The kernel width of the Gaussian filter.
+            data_type (=cv2.CV_32F): The data type of the image elements
+        """
         self.image = self.get_gaussian_blur(kernel_height=kernel_height,
                                             kernel_width=kernel_width,
                                             data_type=data_type)
 
     def get_canny(self, threshold_1=100, threshold_2=200):
+        """Retrieves the result of the Canny filter of the storaged image.
+
+        Keyword Args:
+            threshold_1 (=100): The lower threshold of the filter.
+            threshold_2 (=200): The higher threshold of the filter.
+        """
         return cv2.Canny(self.image, threshold_1, threshold_2)
 
     def apply_canny(self, threshold_1=100, threshold_2=200):
+        """Applies the the Canny filter to the storaged image.
+
+        Keyword Args:
+            threshold_1 (=100): The lower threshold of the filter.
+            threshold_2 (=200): The higher threshold of the filter.
+        """
         self.image = self.get_canny(threshold_1, threshold_2)
 
     def show_canny(self, threshold_1=100, threshold_2=200,
                    window_name='canny'):
+        """Displays the current image's Canny.
+
+        Keyword Args:
+            threshold_1 (=100): The lower threshold of the filter.
+            threshold_2 (=200): The higher threshold of the filter.
+            window_name (='canny'): the name of the window in which the image
+                will be displayed
+        """
         cv2.imshow(window_name, self.get_canny(threshold_1, threshold_2))
 
     def __repr__(self):

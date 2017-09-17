@@ -1,25 +1,35 @@
 # -*- coding: utf-8 -*-
+"""A module to implement some more complex image manipulations."""
+__author__ = "Luiz Sol"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Luiz Sol"
+__email__ = "luizedusol@gmail.com"
+
 
 import cv2
 import numpy as np
 
-from container import Container
-
 
 class ImageProcessor(object):
-    """A class responsible for storing images.
+    """A class responsible for processing images."""
 
-    Attributes:
-        image: A virtual attribute to implement the setter and getter of _image
-        _image: The real attribute responsible for storing the class image
-    """
-
-    def __init__(self, image=None):
-        """Inits ImageProcessor with an optional image."""
+    def __init__(self):
         pass
 
-    def get_circle_hough_by_grad(self, container, radius, threshold=10):
+    def get_circle_hough_transform_by_grad(self, container, radius,
+                                           threshold=0):
+        """Uses an image's gradient to determine the existence of a given
+        circle in it by means of the hough transform.
 
+        Args:
+            container: a Container object containing the image to be analized.
+            radius: the radius of the circle to be searched for
+
+        Keyword Args:
+            threshold (=0): The minimum absolute value of the gradient to be
+                taken into consideration
+        """
         channels = container.colors()
 
         if channels == 1:
@@ -58,17 +68,21 @@ class ImageProcessor(object):
 
         return result
 
-    def show_circle_hough_by_grad(self, container, radius,
-                                  window_name='complex_grad',
-                                  threshold=10):
-        cv2.imshow(window_name, self.get_circle_hough_by_grad(
-            container, radius, threshold=threshold))
-        cv2.waitKey()
-
     def detect_circle(self, container, radius, threshold=44,
                       data_type=cv2.CV_32F):
-        t_container = Container(container.image)
-        points = self.get_circle_hough_by_grad(t_container, radius,
+        """Uses an image's resulting hough circle transform to determine the
+        existence of a circle in it.
+
+        Args:
+            container: a Container object containing the image to be analized.
+            radius: the radius of the circle to be searched for
+
+        Keyword Args:
+            threshold (=44): The minimum absolute value of a point to be
+                be considered a circle center
+            data_type (=cv2.CV_32F): The data type of the image elements
+        """
+        points = self.get_circle_hough_by_grad(container.image, radius,
                                                threshold=0)
 
         points = cv2.GaussianBlur(points, (5, 5), data_type)
@@ -80,6 +94,18 @@ class ImageProcessor(object):
 
     def detect_tyre(self, container, min_radius=50, max_radius=70,
                     show_text=True):
+        """Uses an image's resulting hough circle transform to determine and
+        highlight the existence of a tyre in it.
+
+        Args:
+            container: a Container object containing the image to be analized.
+
+        Keyword Args:
+            min_radius (=50): the minimum radius of the tyre to be searched for
+            max_radius (=70): the maximu radius of the tyre to be searched for
+            show_text (=True): whether information about the detected circle
+                should be added to the image
+        """
         for radius in range(min_radius, max_radius):
             center = self.detect_circle(container, radius)
             if center is not None:
