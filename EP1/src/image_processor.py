@@ -56,6 +56,8 @@ class ImageProcessor(object):
                     if abs(value) > threshold:
                         dx = int(np.cos(np.angle(value)) * radius)
                         dy = int(np.sin(np.angle(value)) * radius)
+                        # Adding points on the gradient direction and by the
+                        # radius distance
                         if ((line + dy) < lines and (line + dy) > 0) and \
                            ((col + dx) < cols and (col + dx) > 0):
                             result[line + dy, col + dx] += \
@@ -82,8 +84,8 @@ class ImageProcessor(object):
                 be considered a circle center
             data_type (=cv2.CV_32F): The data type of the image elements
         """
-        points = self.get_circle_hough_by_grad(container.image, radius,
-                                               threshold=0)
+        points = self.get_circle_hough_transform_by_grad(
+            container, radius, threshold=0)
 
         points = cv2.GaussianBlur(points, (5, 5), data_type)
         center = np.unravel_index(points.argmax(), points.shape)

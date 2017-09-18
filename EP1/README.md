@@ -1,13 +1,194 @@
 # PSI3472 Concepção e Implementação de Sistemas Eletrônicos Inteligentes
 #### 1o exercício-programa
-#### Aluno: Luiz Eduardo Sol (8586861)
+#### Alunos: Luiz Eduardo Sol (8586861), Felipe Caracciolo Gonçalves (8988341)
 
 ### 1) Faça um programa "extrai" que lê o vídeo vid4.avi e extrai dez quadros distribuídos ao longo do vídeo: quad0.png, quad1.png, ..., quad9.png. Vamos usar os quadros extraídos para testar o resto do processamento.
->extrai vid4.avi quad => gera quad0.png ... quad9.png
+> extrai vid4.avi quad => gera quad0.png ... quad9.png
+
+#### `extrai.py`:
+```python
+# -*- coding: utf-8 -*-
+"""A module that implements the EP's first question."""
+__author__ = "Luiz Sol"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Luiz Sol"
+__email__ = "luizedusol@gmail.com"
+
+import sys
+
+import video_processor as vp
+
+vp.get_frames(sys.argv[1], sys.argv[2])
+
+```
+
+### 2) Faça um programa canny que recebe um quadro de vid4.avi (quadi.png) e detecta as arestas usando o algoritmo de Canny (cannyi.png). Use para isso a função pronta do OpenCV.
+> canny quad4.png canny4.png
+
+#### `canny.py`:
+```python
+# -*- coding: utf-8 -*-
+"""A module that implements the EP's second question."""
+__author__ = "Luiz Sol"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Luiz Sol"
+__email__ = "luizedusol@gmail.com"
+
+import sys
+
+from container import Container
+
+img = Container(sys.argv[1])
+
+img.apply_canny()
+
+img.save(sys.argv[2])
+
+```
+###  3) Faça um programa houghb que recebe cannyi.png e detecta círculo (se existir), gerando houghbi.png. Pode pegar trechos dos exemplos da apostila.
+> houghb canny4.png houghb4.png
+
+#### `houghb.py`:
+```python
+# -*- coding: utf-8 -*-
+"""A module that implements the EP's third question."""
+__author__ = "Luiz Sol"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Luiz Sol"
+__email__ = "luizedusol@gmail.com"
+
+import sys
+
+from container import Container
+from image_processor import ImageProcessor
+
+img = Container(sys.argv[1])
+proc = ImageProcessor()
+
+im2 = proc.detect_tyre(img, min_radius=1, max_radius=img.cols(),
+                       show_text=True)
+
+if im2.image is not None:
+    im2.save(sys.argv[2])
+
+```
 
 
+### 4) Faça um programa gradiente que recebe um quadro (quadi.png), calcula o gradiente e o grava como uma imagem complexa (gradi.img). Permita aplicar o filtro gaussiano antes de calcular o gradiente.
+> gradiente quad4.png grad4.img 2
 
-### Códigos-fonte:
+(2 é o desvio do filtro gaussiano)
+
+#### `gradiente.py`:
+```python
+# -*- coding: utf-8 -*-
+"""A module that implements the EP's fourth question."""
+__author__ = "Luiz Sol"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Luiz Sol"
+__email__ = "luizedusol@gmail.com"
+
+import sys
+
+from container import Container
+from image_processor import ImageProcessor
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+img = Container(sys.argv[1])
+proc = ImageProcessor()
+
+if is_number(sys.argv[-1]):
+    img.apply_gaussian_blur(kernel_height=2 * int(sys.argv[-1]) + 1,
+                            kernel_width=2 * int(sys.argv[-1]) + 1)
+
+img.apply_grad_img()
+
+img.save(sys.argv[2])
+
+```
+
+### 7) Escreva hougrad que usa direção e magnitude do gradiente para calcular a transformada de Hough. Deve gravar as imagens do espaço de Hough como Hougrad???.png.
+> hougrad quad4.png hougrad 18 20 => gera hougrad018.png hougrad019.png hougrad020.png
+
+#### `hougrad.py`:
+```python
+# -*- coding: utf-8 -*-
+"""A module that implements the EP's seventh question."""
+__author__ = "Luiz Sol"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Luiz Sol"
+__email__ = "luizedusol@gmail.com"
+
+import sys
+
+from container import Container
+from image_processor import ImageProcessor
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+img = Container(sys.argv[1])
+proc = ImageProcessor()
+
+img_name = 'Hougrad?.png'
+
+for radius in range(int(sys.argv[-2]), int(sys.argv[-1])):
+    t_im = Container(proc.get_circle_hough_transform_by_grad(img, radius))
+    t_im.save(path=img_name.replace('?', str(radius)))
+
+```
+
+### 8) Escreva gradcir que detecta os círculos em imagens, pintando-os de amarelo.
+> gradcir quad4.png houcir4.png 18 20
+
+#### `gradcir.py`:
+```python
+# -*- coding: utf-8 -*-
+"""A module that implements the EP's eighth question."""
+__author__ = "Luiz Sol"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Luiz Sol"
+__email__ = "luizedusol@gmail.com"
+
+import sys
+
+from container import Container
+from image_processor import ImageProcessor
+
+img = Container(sys.argv[1])
+proc = ImageProcessor()
+
+im2 = proc.detect_tyre(img, min_radius=int(sys.argv[-2]),
+                       max_radius=int(sys.argv[-1]),
+                       show_text=True)
+
+if im2 is not None:
+    im2.save(sys.argv[2])
+
+```
+
+
+### Outros códigos-fonte:
 
 As classes e módulos desse EP estão estruturados da seguinte forma:
 ```shell
@@ -18,7 +199,7 @@ src
 ```
 
 E estes são os conteúdos desses arquivos:
-##### `container.py`
+##### `container.py`:
 ```python
 # -*- coding: utf-8 -*-
 """A module to implement some basic image manipulations."""
@@ -175,6 +356,10 @@ class Container(object):
 
         return n_grad
 
+    def apply_grad_img(self, kernel_size=5, data_type=cv2.CV_32F):
+        self.image = self.get_grad_img(kernel_size=kernel_size,
+                                       data_type=data_type)
+
     def show_grad(self, kernel_size=5, data_type=cv2.CV_32F,
                   window_name='grad'):
         """Displays the current image's gradient.
@@ -254,7 +439,7 @@ class Container(object):
 
 ```
 
-##### `image_processor.py`
+##### `image_processor.py`:
 ```python
 # -*- coding: utf-8 -*-
 """A module to implement some more complex image manipulations."""
@@ -314,6 +499,8 @@ class ImageProcessor(object):
                     if abs(value) > threshold:
                         dx = int(np.cos(np.angle(value)) * radius)
                         dy = int(np.sin(np.angle(value)) * radius)
+                        # Adding points on the gradient direction and by the
+                        # radius distance
                         if ((line + dy) < lines and (line + dy) > 0) and \
                            ((col + dx) < cols and (col + dx) > 0):
                             result[line + dy, col + dx] += \
@@ -340,8 +527,8 @@ class ImageProcessor(object):
                 be considered a circle center
             data_type (=cv2.CV_32F): The data type of the image elements
         """
-        points = self.get_circle_hough_by_grad(container.image, radius,
-                                               threshold=0)
+        points = self.get_circle_hough_transform_by_grad(
+            container, radius, threshold=0)
 
         points = cv2.GaussianBlur(points, (5, 5), data_type)
         center = np.unravel_index(points.argmax(), points.shape)
@@ -384,9 +571,10 @@ class ImageProcessor(object):
                 return result
 
         return None
+
 ```
 
-#### `video_processor.py`
+#### `video_processor.py`:
 ```python
 # -*- coding: utf-8 -*-
 """A module to implement some basic video manipulations."""

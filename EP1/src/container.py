@@ -153,6 +153,10 @@ class Container(object):
 
         return n_grad
 
+    def apply_grad_img(self, kernel_size=5, data_type=cv2.CV_32F):
+        self.image = self.get_grad_img(kernel_size=kernel_size,
+                                       data_type=data_type)
+
     def show_grad(self, kernel_size=5, data_type=cv2.CV_32F,
                   window_name='grad'):
         """Displays the current image's gradient.
