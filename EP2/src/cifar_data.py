@@ -2,41 +2,67 @@
 # -*- coding: utf-8 -*-
 """A module to download and parse the CIFAR 10 data.
 
-I modified this module to be PEP-8 compliant and to better suit this project's
-needs.
+I modified this module to be PEP-8 and Python3 compliant and to better suit
+this project's needs.
+
+The CIFAR-10 dataset consists of 60000 32x32 colour images in 10 classes,
+with 6000 images per class. There are 50000 training images and 10000 test
+images.
 
 .. _Original module repository:
     https://github.com/kgeorge/kgeorge_dpl
 
 .. _Current repository:
     https://github.com/luizsol/sisInteligentes
+
+.. _CIFAR 10 Website:
+    http://www.cs.toronto.edu/~kriz/cifar.html
 """
-__authors__ = ['Koshy George', 'Luiz Sol']
-__author__ = 'Koshy George'
+__authors__ = ['Koshy George', 'Dongyoung Kim', 'Luiz Sol']
+__author__ = 'Luiz Sol'
 __version__ = '0.0.1'
 __date__ = '2017-10-10'
 __maintainer__ = 'Luiz Sol'
 __email__ = 'luizedusol@gmail.com'
 __status__ = 'Development'
 
-import sys
-import os
-import numpy as np
-import re
-import pickle
-import urllib
-import tarfile
 import matplotlib.pyplot as plt
+import numpy as np
+import os
+import pickle
+from random import randint
+import re
+import sys
+import tarfile
+import urllib.request
 
 
 def unpickle(path):
-    with open(path, 'rb') as fp:
-        return pickle.load(fp)
+    """Extracts images and labels from CIFAR's files."""
+    with open(path, "rb") as f:
+        return pickle.load(f, encoding='latin1')
 
 
 class CifarData(object):
-    DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz'
+    """A class to download, extract, load, process and store CIFAR-10 data.
 
+    Constants:
+        DATA_URL (str): The Python CIFAR 10 URL.
+        DOWNLOADED_DATA_FILEPATH_REG_EXPRESSION (re): A regular expression to
+            match the CIFAR 10 downloaded data.
+        LOADED_IMG_HEIGHT (int): The CIFAR 10 image's default height in pixels.
+        LOADED_IMG_WIDTH (int): The CIFAR 10 image's default width in pixels.
+        LOADED_IMG_DEPTH (int): The CIFAR 10 image's default number of channels
+            (colors).
+        LABELS (list): A list containing the meaning of each image label.
+
+    Attributes:
+        train_dataset (dict): A dict containing both the training images and
+            labels.
+        test_dataset (dict): A dict containing both the test images and labels.
+
+    """
+    DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz'
     # regular expression that matches a datafile
     DOWNLOADED_DATA_FILEPATH_REG_EXPRESSION = re.compile('^data_batch_\d+')
     # cifar-10 consist of 32 x 32 x 3 rgb images
@@ -44,26 +70,81 @@ class CifarData(object):
     LOADED_IMG_WIDTH = 32
     LOADED_IMG_DEPTH = 3
 
-    def __init__(self, verbose=True):
-        # training and validate datasets as numpy n-d arrays, apropriate
-        # portions of which are ready to be fed to the placeholder variables
+    LABELS = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog',
+              'horse', 'ship', 'truck']
+
+    def __init__(self, verbose=True, download_and_load=True, data_path=None):
+        """The class constructor.
+
+        Keyword Args:
+            verbose (bool, default=True): True if this class methods should
+                give feedback to the user during it's execution.
+            download_and_load (bool, default=True): If True it will download
+                CIFAR 10 data in case it isn't present, process and load it.
+            data_path (str, default=None): The path to de directory into wich
+                the CIFAR 10 data must be stored.
+
+        """
         self.train_dataset = {'data': [], 'labels': []}
-        self.validate_dataset = {'data': [], 'labels': []}
         self.test_dataset = {'data': {}, 'labels': []}
-        self.label_names_for_validation_and_test = None
         self.verbose = verbose
 
-    def _verbose_print(self, *args):
-        if self.verbose:
-            print(args)
+        if download_and_load:
+            self.download_and_load(data_path=data_path)
 
-    def maybe_download_and_extract(self, dest_directory):
-        """Download and extract the tarball from Alex's website."""
-        if not os.path.exists(dest_directory):
-            os.makedirs(dest_directory)
+    def download_and_load(self, data_path=None):
+        """Downloads (in case it doesn't exists) and load the CIFAR 10 data.
+
+        Keyword Args:
+            data_path (str, default=None): The path to de directory into wich
+                the CIFAR 10 data will be searched for and stored in case it
+                doesn't exists.
+        """
+        if data_path is None:
+            data_path = 'data'
+
+        if not self.check_files(data_path + '/cifar-10-batches-py'):
+            self.download_and_extract(data_path=data_path)
+
+        self.load_cifar10_data(data_path=data_path + '/cifar-10-batches-py')
+
+    def check_files(self, data_path):
+        """Searches for the CIFAR 10 data into a given directory.
+
+        Args:
+            data_path (str): The directory into which the CIFAR data will be
+                searched for.
+        """
+        files = os.listdir(data_path)
+
+        if 'test_batch' not in files:
+            return False
+
+        if 'batches.meta' not in files:
+            return False
+
+        for i in range(1, 6):
+            if 'data_batch_{}'.format(i) not in files:
+                return False
+
+        return True
+
+    def download_and_extract(self, data_path=None):
+        """Download and extract the tarball from CIFAR 10 website.
+
+        Keyword Args:
+            data_path (str, default=None): The path to de directory into wich
+                the CIFAR 10 data will be downloaded and extracted.
+
+        """
+        if data_path is None:
+            data_path = 'data'
+
+        if not os.path.exists(data_path):
+            os.makedirs(data_path)
 
         filename = self.DATA_URL.split('/')[-1]
-        filepath = os.path.join(dest_directory, filename)
+        filepath = os.path.join(data_path, filename)
         if not os.path.exists(filepath):
             def _progress(count, block_size, total_size):
                 sys.stdout.write('\r>> Downloading %s %.1f%%' % (
@@ -73,147 +154,109 @@ class CifarData(object):
 
                 sys.stdout.flush()
 
-            filepath, _ = urllib.urlretrieve(CifarData.DATA_URL, filepath,
-                                             _progress)
+            filepath, _ = urllib.request.urlretrieve(CifarData.DATA_URL,
+                                                     filepath,
+                                                     _progress)
         statinfo = os.stat(filepath)
         self._verbose_print('Successfully downloaded', filename,
                             statinfo.st_size, 'bytes.')
 
         with tarfile.open(filepath, 'r:gz') as t:
-            dataset_dir = os.path.join(dest_directory, t.getmembers()[0].name)
-            t.extractall(dest_directory)
+            dataset_dir = os.path.join(data_path, t.getmembers()[0].name)
+            t.extractall(data_path)
 
         return dataset_dir
 
-    def show_image(self, index=-1, data=None):
-        assert(index < data.shape[0])
-        image_holder = np.zeros(shape=[data.shape[1], data.shape[2],
-                                data.shape[3]], dtype=np.float32)
+    def show_image(self, image_set='train', index=None, interactive_mode=True):
+        """Shows an image stored on this class.
 
-        image_holder[:, :, :] = data[index, :, :, :]
-        plt.imshow(image_holder)
+        Keyword Args:
+            image_set (str, default='train'): The set from where the image must
+                be retrieved (options are 'train' and 'test').
+            index (int, default=None): The list index of the image to be
+                displayed. If None a random image will be choosed.
+            interactive_mode (bool, default=True): If True will activate
+                matplotlib.pyplot's interactive mode. If False will disable it.
 
-    def _prepare_input(self, data=None, labels=None):
-        epsilon = 1.0e-8
-        scale = 55.0
-        assert(data.shape[1] == CifarData.LOADED_IMG_HEIGHT *
-               CifarData.LOADED_IMG_WIDTH * CifarData.LOADED_IMG_DEPTH)
+        """
+        if interactive_mode:
+            plt.ion()
+        else:
+            plt.ioff()
 
-        assert(data.shape[0] == labels.shape[0])
+        if image_set == 'train':
+            target = self.train_dataset
+        else:
+            target = self.test_dataset
 
-        # do mean normaization across all samples
-        mu = np.mean(data, axis=1)[:, np.newaxis]
-        assert(mu.shape == (data.shape[0], 1))
-        data = data - mu
-        normalizer = np.sqrt((data ** 2).sum(axis=1)) / scale
-        normalizer[normalizer < epsilon] = 1.0
-        assert(normalizer.shape[0] == (data.shape[0]))
-        normalizer = normalizer[:, np.newaxis]
-        data = data / normalizer
+        if index is None:
+            index = randint(0, len(target['data']))
 
-        data = data.reshape([-1, CifarData.LOADED_IMG_DEPTH,
-                             CifarData.LOADED_IMG_HEIGHT,
-                             CifarData.LOADED_IMG_WIDTH])
+        plt.figure(num=self.LABELS[target['labels'][index]])
+        plt.imshow(target['data'][index])
+        plt.show()
 
-        data = data.transpose([0, 2, 3, 1])
-        data = data.astype(np.float32)
-        return data, labels
+    def load_cifar10_data(self, data_path='data/cifar-10-batches-py',
+                          n_train_samples=50000, n_test_samples=10000):
+        """Loads CIFAR train and test data.
 
-    def post_load_summary_(self):
-        def get_details_dataset(dataset):
-            return 'data:  shape={sh}  , dtype={dt}, labels: shape={lsh}, ' \
-                   'dtype={ldt}'.format(sh=dataset['data'].shape,
-                                        dt=dataset['data'].dtype,
-                                        lsh=dataset['labels'].shape,
-                                        ldt=dataset['labels'].dtype)
+        The shape of data is 32 x 32 x 3.
 
-        self._verbose_print('train: %s' % get_details_dataset(self.train_dataset))
-        self._verbose_print('validate: %s' %
-                      get_details_dataset(self.validate_dataset))
+        Keyword Args:
+            data_path (str, default='data/cifar-10-batches-py'): The directory
+                into which the CIFAR data is stored.
+            n_train_samples (int, default=50000): The number of training
+                samples to be loaded (max=50000).
+            n_test_samples (int, default=50000): The number of test
+                samples to be loaded (max=10000).
 
-        self._verbose_print('test: %s' % get_details_dataset(self.test_dataset))
-        self._verbose_print('label names for images used %r' %
-                      self.label_names_for_validation_and_test)
+        .. _Original Code:
+            https://luckydanny.blogspot.com.br/2016/07/load-cifar-10-dataset-in
+                -python3.html
 
-    def load_and_preprocess_input(self, dataset_dir=None, n_train_samples=-1,
-                                  n_validate_samples=-1, n_test_samples=-1):
-        assert(os.path.isdir(dataset_dir))
-        # need to have a valid value for number of  validate and test samples
-        assert(n_test_samples >= 0)
-        assert(n_validate_samples >= 0)
-        trn_all_data = []
-        trn_all_labels = []
-        vldte_and_test_data = []
-        vldte_and_test_labels = []
+        """
+        train_data = None
+        train_labels = []
 
-        # for loading train dataset, iterate through the directory to get
-        # matching data file
-        for root, dirs, files in os.walk(dataset_dir):
-            for f in files:
-                m = CifarData.DOWNLOADED_DATA_FILEPATH_REG_EXPRESSION.match(f)
-                if m:
-                    relpath = os.path.join(root, f)
-                    d = unpickle(os.path.join(root, f))
-                    trn_all_data.append(d['data'])
-                    trn_all_labels.append(d['labels'])
+        for i in range(1, 6):
+            data_dic = unpickle(data_path + '/data_batch_{}'.format(i))
+            if i == 1:
+                train_data = data_dic['data']
+            else:
+                train_data = np.vstack((train_data, data_dic['data']))
 
-        # concatenate all the  data in various files into one ndarray of shape
-        # data.shape == (no_of_samples, 3072),
-        # where 3072 = CifarData.LOADED_IMG_DEPTH x CifarData.LOADED_IMG_HEIGHT
-        # x CifarData.LOADED_IMG_WIDTH
-        # labels.shape == (no_of_samples)
-        trn_all_data, trn_all_labels = (np.concatenate(trn_all_data).astype(
-            np.float32), np.concatenate(trn_all_labels).astype(np.int32))
+            train_labels += data_dic['labels']
 
-        # we need only n_train_samples
-        if n_train_samples >= 0:
-            trn_all_data = trn_all_data[0:n_train_samples, :]
-            trn_all_labels = trn_all_labels[0:n_train_samples, :]
+        test_data_dic = unpickle(data_path + '/test_batch')
+        test_data = test_data_dic['data']
+        test_labels = test_data_dic['labels']
 
-        # load the only test data set for validation and testing
-        # use only the first n_validate_samples samples for validating
-        test_temp = unpickle(os.path.join(dataset_dir, 'test_batch'))
-        assert((n_validate_samples + n_test_samples) <
-               test_temp['data'].shape[0])
+        train_data = train_data.reshape((len(train_data),
+                                        self.LOADED_IMG_DEPTH,
+                                        self.LOADED_IMG_HEIGHT,
+                                        self.LOADED_IMG_HEIGHT))
 
-        vldte_and_test_data = \
-            test_temp['data'][0:(n_validate_samples + n_test_samples), :]
+        train_data = np.rollaxis(train_data, 1, 4)
+        train_labels = np.array(train_labels)
 
-        vldte_and_test_labels = \
-            test_temp['labels'][0:(n_validate_samples + n_test_samples)]
+        test_data = test_data.reshape((len(test_data),
+                                      self.LOADED_IMG_DEPTH,
+                                      self.LOADED_IMG_HEIGHT,
+                                      self.LOADED_IMG_HEIGHT))
 
-        vldte_and_test_data, vldte_and_test_labels = \
-            (np.concatenate([vldte_and_test_data]).astype(np.float32),
-             np.concatenate([vldte_and_test_labels]).astype(np.int32))
+        test_data = np.rollaxis(test_data, 1, 4)
+        test_labels = np.array(test_labels)
 
-        # transform the test images in the same manner as the train images
-        self.train_dataset['data'], self.train_dataset['labels'] = \
-            self._prepare_input(data=trn_all_data, labels=trn_all_labels)
+        self.train_dataset = {'data': train_data[0:n_train_samples],
+                              'labels': train_labels[0:n_train_samples]}
+        self.test_dataset = {'data': test_data[0:n_test_samples],
+                             'labels': test_labels[0:n_test_samples]}
 
-        validate_and_test_data, validate_and_test_labels = \
-            self._prepare_input(data=vldte_and_test_data,
-                                labels=vldte_and_test_labels)
+        return None
 
-        self.validate_dataset['data'] = \
-            validate_and_test_data[0:n_validate_samples, :, :, :]
-
-        self.validate_dataset['labels'] = \
-            validate_and_test_labels[0:n_validate_samples]
-
-        self.test_dataset['data'] = \
-            validate_and_test_data[n_validate_samples:(n_validate_samples +
-                                                       n_test_samples),
-                                   :, :, :]
-
-        self.test_dataset['labels'] = \
-            validate_and_test_labels[n_validate_samples:(n_validate_samples +
-                                                         n_test_samples)]
-
-        # load all label-names
-        self.label_names_for_validation_and_test = \
-            unpickle(os.path.join(dataset_dir, 'batches.meta'))['label_names']
-
-        self.post_load_summary_()
+    def _verbose_print(self, *args):
+        if self.verbose:
+            print(args)
 
 
 if __name__ == "__main__":
