@@ -44,14 +44,14 @@ class CifarData(object):
     LOADED_IMG_WIDTH = 32
     LOADED_IMG_DEPTH = 3
 
-    def __init__(self):
+    def __init__(self, verbose=True):
         # training and validate datasets as numpy n-d arrays, apropriate
         # portions of which are ready to be fed to the placeholder variables
         self.train_dataset = {'data': [], 'labels': []}
         self.validate_dataset = {'data': [], 'labels': []}
         self.test_dataset = {'data': {}, 'labels': []}
         self.label_names_for_validation_and_test = None
-        self.verbose = True
+        self.verbose = verbose
 
     def _verbose_print(self, *args):
         if self.verbose:
