@@ -21,7 +21,7 @@ images.
 __authors__ = ['Koshy George', 'Dongyoung Kim', 'Luiz Sol']
 __author__ = 'Luiz Sol'
 __version__ = '0.0.1'
-__date__ = '2017-10-10'
+__date__ = '2017-10-12'
 __maintainer__ = 'Luiz Sol'
 __email__ = 'luizedusol@gmail.com'
 __status__ = 'Development'
@@ -43,7 +43,7 @@ def unpickle(path):
         return pickle.load(f, encoding='latin1')
 
 
-class CifarData(object):
+class CifarData:
     """A class to download, extract, load, process and store CIFAR-10 data.
 
     Constants:
@@ -85,9 +85,10 @@ class CifarData(object):
                 the CIFAR 10 data must be stored.
 
         """
-        self.train_dataset = {'data': [], 'labels': []}
-        self.test_dataset = {'data': {}, 'labels': []}
+        self.train_dataset = {'data': [], 'labels': [], 'cls': []}
+        self.test_dataset = {'data': {}, 'labels': [], 'cls': []}
         self.verbose = verbose
+        self.current_batch_index = 0
 
         if download_and_load:
             self.download_and_load(data_path=data_path)
@@ -248,11 +249,45 @@ class CifarData(object):
         test_labels = np.array(test_labels)
 
         self.train_dataset = {'data': train_data[0:n_train_samples],
-                              'labels': train_labels[0:n_train_samples]}
+                              'labels': train_labels[0:n_train_samples],
+                              'cls': [np.zeros(10)
+                                      for i in range(n_train_samples)]}
+
+        for i in range(0, n_train_samples):
+            self.train_dataset['cls'][i][self.train_dataset['labels'][i]] = 1.
+
         self.test_dataset = {'data': test_data[0:n_test_samples],
-                             'labels': test_labels[0:n_test_samples]}
+                             'labels': test_labels[0:n_test_samples],
+                             'cls': [np.zeros(10)
+                                     for i in range(n_train_samples)]}
+
+        for i in range(0, n_test_samples):
+            self.test_dataset['cls'][i][self.test_dataset['labels'][i]] = 1.
 
         return None
+
+    def next_batch(self, batch_size):
+        start = self.current_batch_index
+        end = start + batch_size
+
+        if end >= len(self.test_dataset['data']):
+            end = len(self.test_dataset['data']) - 1
+            self.current_batch_index = 0
+        else:
+            self.current_batch_index = end
+
+        n_pixels = self.LOADED_IMG_WIDTH * self.LOADED_IMG_HEIGHT * \
+            self.LOADED_IMG_DEPTH
+
+        result_data = np.concatenate(
+            tuple(item.reshape((1, n_pixels))
+                  for item in self.train_dataset['data'][start:end]))
+
+        result_labels = np.concatenate(
+            tuple(item.reshape((1, n_pixels))
+                  for item in self.train_dataset['cls'][start:end]))
+
+        return (result_data, result_labels)
 
     def _verbose_print(self, *args):
         if self.verbose:
