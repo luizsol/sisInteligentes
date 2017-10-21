@@ -73,6 +73,8 @@ class CifarData:
     LABELS = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog',
               'horse', 'ship', 'truck']
 
+    N_CATEGORIES = 10
+
     def __init__(self, verbose=True, download_and_load=True, data_path=None):
         """The class constructor.
 
@@ -85,10 +87,17 @@ class CifarData:
                 the CIFAR 10 data must be stored.
 
         """
-        self.train_dataset = {'data': [], 'labels': [], 'cls': []}
-        self.test_dataset = {'data': {}, 'labels': [], 'cls': []}
+        self.train_dataset = {'data': [], 'labels': [], 'cls': [],
+                              'data_array': None, 'labels_matrix': None}
+
+        self.test_dataset = {'data': {}, 'labels': [], 'cls': [],
+                             'data_array': None, 'labels_matrix': None}
+
         self.verbose = verbose
         self.current_batch_index = 0
+
+        self.shape = (self.LOADED_IMG_HEIGHT, self.LOADED_IMG_HEIGHT,
+                      self.LOADED_IMG_DEPTH)
 
         if download_and_load:
             self.download_and_load(data_path=data_path)
@@ -264,6 +273,18 @@ class CifarData:
         for i in range(0, n_test_samples):
             self.test_dataset['cls'][i][self.test_dataset['labels'][i]] = 1.
 
+        self.train_dataset['data_array'] = np.array(
+            [item.flatten() for item in self.train_dataset['data']])
+
+        self.train_dataset['labels_array'] = np.array(
+            [item.flatten() for item in self.train_dataset['labels']])
+
+        self.test_dataset['data_array'] = np.array(
+            [item.flatten() for item in self.test_dataset['data']])
+
+        self.test_dataset['labels_array'] = np.array(
+            [item.flatten() for item in self.test_dataset['labels']])
+
         return None
 
     def next_batch(self, batch_size):
@@ -276,22 +297,18 @@ class CifarData:
         else:
             self.current_batch_index = end
 
-        n_pixels = self.LOADED_IMG_WIDTH * self.LOADED_IMG_HEIGHT * \
-            self.LOADED_IMG_DEPTH
+        result_data = self.train_dataset['data_array'][start:end]
 
-        result_data = np.concatenate(
-            tuple(item.reshape((1, n_pixels))
-                  for item in self.train_dataset['data'][start:end]))
-
-        result_labels = np.concatenate(
-            tuple(item.reshape((1, n_pixels))
-                  for item in self.train_dataset['cls'][start:end]))
+        result_labels = self.train_dataset['cls'][start:end]
 
         return (result_data, result_labels)
 
     def _verbose_print(self, *args):
         if self.verbose:
             print(args)
+
+    def __len__(self):
+        return len(self.train_dataset['data'])
 
 
 if __name__ == "__main__":
