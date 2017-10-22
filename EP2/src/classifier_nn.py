@@ -95,6 +95,8 @@ class ClassifierNN:
                 epoch_loss = 0
                 for _ in range(int(len(self.input_data) / batch_size)):
                     batch_x, batch_y = self.input_data.next_batch(batch_size)
+                    # print('batch_x', batch_x)
+                    # print('batch_y', batch_y)
                     _, c = sess.run([optimizer, cost],
                                     feed_dict={self.input_placeholder: batch_x,
                                                label_placeholder: batch_y})
@@ -104,13 +106,16 @@ class ClassifierNN:
                     print('Epoch', epoch + 1, 'completed out of',
                           str(epochs) + '. Loss:', epoch_loss)
 
+            labels = np.array(self.input_data.train_dataset['labels'])
+
+            labels = labels.reshape((len(labels), 1))
+
             correct = tf.equal(tf.argmax(self.ouput_placeholder, 1),
-                               tf.constant(
-                                   self.input_data.test_dataset['labels']))
+                               tf.constant(labels))
 
             accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
 
-            data = self.input_data.test_dataset['data_array']
+            data = self.input_data.train_dataset['data_array']
 
             if verbose:
                 print('Accuracy: ',

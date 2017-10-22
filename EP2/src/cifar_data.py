@@ -88,10 +88,12 @@ class CifarData:
 
         """
         self.train_dataset = {'data': [], 'labels': [], 'cls': [],
-                              'data_array': None, 'labels_matrix': None}
+                              'data_array': None, 'labels_matrix': None,
+                              'cls_array': None}
 
         self.test_dataset = {'data': {}, 'labels': [], 'cls': [],
-                             'data_array': None, 'labels_matrix': None}
+                             'data_array': None, 'labels_matrix': None,
+                             'cls_array': None}
 
         self.verbose = verbose
         self.current_batch_index = 0
@@ -279,11 +281,17 @@ class CifarData:
         self.train_dataset['labels_array'] = np.array(
             [item.flatten() for item in self.train_dataset['labels']])
 
+        self.train_dataset['cls_array'] = np.array(
+            [item.flatten() for item in self.train_dataset['cls']])
+
         self.test_dataset['data_array'] = np.array(
             [item.flatten() for item in self.test_dataset['data']])
 
         self.test_dataset['labels_array'] = np.array(
             [item.flatten() for item in self.test_dataset['labels']])
+
+        self.test_dataset['cls_array'] = np.array(
+            [item.flatten() for item in self.test_dataset['cls']])
 
         return None
 
@@ -299,7 +307,7 @@ class CifarData:
 
         result_data = self.train_dataset['data_array'][start:end]
 
-        result_labels = self.train_dataset['cls'][start:end]
+        result_labels = self.train_dataset['cls_array'][start:end]
 
         return (result_data, result_labels)
 
