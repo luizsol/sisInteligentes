@@ -244,17 +244,17 @@ class CifarData:
         test_labels = test_data_dic['labels']
 
         train_data = train_data.reshape((len(train_data),
-                                        self.LOADED_IMG_DEPTH,
-                                        self.LOADED_IMG_HEIGHT,
-                                        self.LOADED_IMG_HEIGHT))
+                                         self.LOADED_IMG_DEPTH,
+                                         self.LOADED_IMG_HEIGHT,
+                                         self.LOADED_IMG_HEIGHT))
 
         train_data = np.rollaxis(train_data, 1, 4)
         train_labels = np.array(train_labels)
 
         test_data = test_data.reshape((len(test_data),
-                                      self.LOADED_IMG_DEPTH,
-                                      self.LOADED_IMG_HEIGHT,
-                                      self.LOADED_IMG_HEIGHT))
+                                       self.LOADED_IMG_DEPTH,
+                                       self.LOADED_IMG_HEIGHT,
+                                       self.LOADED_IMG_HEIGHT))
 
         test_data = np.rollaxis(test_data, 1, 4)
         test_labels = np.array(test_labels)
@@ -300,10 +300,10 @@ class CifarData:
         end = start + batch_size
 
         if end >= len(self.test_dataset['data']):
-            end = len(self.test_dataset['data']) - 1
-            self.current_batch_index = 0
-        else:
-            self.current_batch_index = end
+            start = 0
+            end = batch_size
+
+        self.current_batch_index = end
 
         result_data = self.train_dataset['data_array'][start:end]
 
