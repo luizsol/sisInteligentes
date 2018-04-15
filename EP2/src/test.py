@@ -2,7 +2,8 @@ from cifar_data import *
 from classifier_nn import *
 
 cfr = CifarData()
-cfr.load_cifar10_data()
+# cfr.load_cifar10_data()
+cfr.download_and_load()
 cfr.show_image()
 
 nn = ClassifierNN(hidden_layers=[3072], input_data=cfr,
